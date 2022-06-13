@@ -4,6 +4,8 @@ import org.openqa.selenium.Keys;
 
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -13,21 +15,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AppCardTest {
 
+    public String generateDate(int days) {
+        return LocalDate.now().plusDays(days).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+    }
+
     @Test
     public void validData() {
-
-        SimpleDateFormat formater = new SimpleDateFormat("dd-MM-yyyy");
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        c.add(Calendar.DATE, 3);
-        String date = formater.format(c.getTime());
-
+        String planningDate = generateDate(3);
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Москва");
-        $(".menu-item__control").click();
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
-        $x("//input [@placeholder=\"Дата встречи\"]").val(date);
+        $x("//input [@placeholder=\"Дата встречи\"]").val(planningDate);
         $x("// input [@name = \"name\"]").val("Васильев Дмитрий");
         $x("//input [@name = \"phone\"]").val("+79112356598");
         $(".checkbox__box").click();
@@ -37,41 +36,31 @@ public class AppCardTest {
 
     @Test
     public void validNameDef() {
-
-        SimpleDateFormat formater = new SimpleDateFormat("dd-MM-yyyy");
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        c.add(Calendar.DATE, 3);
-        String date = formater.format(c.getTime());
-
+        String planningDate = generateDate(3);
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Москва");
-        $(".menu-item__control").click();
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
-        $x("//input [@placeholder=\"Дата встречи\"]").val(date);
+        $x("//input [@placeholder=\"Дата встречи\"]").val(planningDate);
         $x("// input [@name = \"name\"]").val("Орлов-Львовский Дмитрий");
         $x("//input [@name = \"phone\"]").val("+79112356598");
         $(".checkbox__box").click();
         $x("//span [text() = \"Забронировать\"]").click();
         $x("//div [@data-test-id=\"notification\"]").should(visible, Duration.ofSeconds(15));
+        String expected = "Встреча успешно забронирована на " + planningDate;
+        String actual = $x(".// div [@class = \"notification__content\"]").getText();
+        assertEquals(expected,actual);
     }
 
 
     @Test
     public void nonValidCity() {
-
-        SimpleDateFormat formater = new SimpleDateFormat("dd-MM-yyyy");
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        c.add(Calendar.DATE, 3);
-        String date = formater.format(c.getTime());
-
+        String planningDate = generateDate(3);
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Asd");
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
-        $x("//input [@placeholder=\"Дата встречи\"]").val(date);
+        $x("//input [@placeholder=\"Дата встречи\"]").val(planningDate);
         $x("// input [@name = \"name\"]").val("Васильев Дмитрий");
         $x("//input [@name = \"phone\"]").val("+79112356598");
         $(".checkbox__box").click();
@@ -83,20 +72,14 @@ public class AppCardTest {
     }
 
     @Test
-    public void nonValidDateDownDown() {
+    public void nonValidDateDown() {
 
-        SimpleDateFormat formater = new SimpleDateFormat("dd-MM-yyyy");
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        c.add(Calendar.DATE, -1);
-        String date = formater.format(c.getTime());
-
+        String planningDate = generateDate(-1);
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
-        $(".menu-item__control").click();
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
-        $x("//input [@placeholder=\"Дата встречи\"]").val(date);
+        $x("//input [@placeholder=\"Дата встречи\"]").val(planningDate);
         $x("// input [@name = \"name\"]").val("Васильев Дмитрий");
         $x("//input [@name = \"phone\"]").val("+79112356598");
         $(".checkbox__box").click();
@@ -110,17 +93,31 @@ public class AppCardTest {
     @Test
     public void nonValidDateDayToDay() {
 
-        SimpleDateFormat formater = new SimpleDateFormat("dd-MM-yyyy");
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        String date = formater.format(c.getTime());
-
+        String planningDate = generateDate(0);
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
-        $(".menu-item__control").click();
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
-        $x("//input [@placeholder=\"Дата встречи\"]").val(date);
+        $x("//input [@placeholder=\"Дата встречи\"]").val(planningDate);
+        $x("// input [@name = \"name\"]").val("Васильев Дмитрий");
+        $x("//input [@name = \"phone\"]").val("+79112356598");
+        $(".checkbox__box").click();
+        $x("//span [text() = \"Забронировать\"]").click();
+        String actual = $x("//span [@data-test-id=\"date\"] ").getText();
+        String expected = "Заказ на выбранную дату невозможен";
+
+        assertEquals(actual, expected);
+    }
+
+    @Test
+    public void nonValidDateUpOneDay() {
+
+        String planningDate = generateDate(1);
+        open("http://localhost:9999/");
+        $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
+        $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
+        $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
+        $x("//input [@placeholder=\"Дата встречи\"]").val(planningDate);
         $x("// input [@name = \"name\"]").val("Васильев Дмитрий");
         $x("//input [@name = \"phone\"]").val("+79112356598");
         $(".checkbox__box").click();
@@ -142,7 +139,6 @@ public class AppCardTest {
 
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
-        $(".menu-item__control").click();
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
         $x("//input [@placeholder=\"Дата встречи\"]").val(date);
@@ -157,6 +153,45 @@ public class AppCardTest {
     }
 
     @Test
+    public void nonValidDateUpTwoDay() {
+
+        String planningDate = generateDate(1);
+        open("http://localhost:9999/");
+        $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
+        $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
+        $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
+        $x("//input [@placeholder=\"Дата встречи\"]").val(planningDate);
+        $x("// input [@name = \"name\"]").val("Васильев Дмитрий");
+        $x("//input [@name = \"phone\"]").val("+79112356598");
+        $(".checkbox__box").click();
+        $x("//span [text() = \"Забронировать\"]").click();
+        String actual = $x("//span [@data-test-id=\"date\"] ").getText();
+        String expected = "Заказ на выбранную дату невозможен";
+
+        assertEquals(actual, expected);
+    }
+
+    @Test
+    public void nonValidDateUpFourDay() {
+
+        String planningDate = generateDate(4);
+        open("http://localhost:9999/");
+        $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
+        $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
+        $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
+        $x("//input [@placeholder=\"Дата встречи\"]").val(planningDate);
+        $x("// input [@name = \"name\"]").val("Васильев Дмитрий");
+        $x("//input [@name = \"phone\"]").val("+79112356598");
+        $(".checkbox__box").click();
+        $x("//span [text() = \"Забронировать\"]").click();
+        $x("//div [@data-test-id=\"notification\"]").should(visible, Duration.ofSeconds(15));
+        String expected = "Встреча успешно забронирована на " + planningDate;
+        String actual = $x(".// div [@class = \"notification__content\"]").getText();
+
+        assertEquals(expected,actual);
+    }
+
+    @Test
     public void nonValidNameLanguage() {
 
         SimpleDateFormat formater = new SimpleDateFormat("dd-MM-yyyy");
@@ -167,7 +202,6 @@ public class AppCardTest {
 
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
-        $(".menu-item__control").click();
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
         $x("//input [@placeholder=\"Дата встречи\"]").val(date);
@@ -193,7 +227,6 @@ public class AppCardTest {
 
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
-        $(".menu-item__control").click();
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
         $x("//input [@placeholder=\"Дата встречи\"]").val(date);
@@ -218,7 +251,6 @@ public class AppCardTest {
 
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
-        $(".menu-item__control").click();
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
         $x("//input [@placeholder=\"Дата встречи\"]").val(date);
@@ -243,7 +275,6 @@ public class AppCardTest {
 
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
-        $(".menu-item__control").click();
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
         $x("//input [@placeholder=\"Дата встречи\"]").val(date);
@@ -268,7 +299,6 @@ public class AppCardTest {
 
         open("http://localhost:9999/");
         $x("// input [@placeholder = \"Город\"]").setValue("Санкт-Петербург");
-        $(".menu-item__control").click();
         $x("//input [@placeholder=\"Дата встречи\"]").doubleClick();
         $x("//input [@placeholder=\"Дата встречи\"]").sendKeys(Keys.BACK_SPACE);
         $x("//input [@placeholder=\"Дата встречи\"]").val(date);
